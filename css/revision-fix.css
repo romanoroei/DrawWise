@@ -1,0 +1,1 @@
+.screen[data-screen="1"].active{height:calc(100dvh - 275px)!important;min-height:380px!important}@media(max-width:850px){.screen[data-screen="1"].active{height:auto!important;min-height:calc(100dvh - 235px)!important}}

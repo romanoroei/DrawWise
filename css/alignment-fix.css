@@ -1,0 +1,1 @@
+.product-ledger,.product-single .product-card{grid-row:1!important}.product-nav{grid-row:2!important}.product-ledger{margin-top:0!important}@media(max-width:850px){.product-ledger,.product-single .product-card,.product-nav{grid-row:auto!important}}
