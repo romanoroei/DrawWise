@@ -360,7 +360,7 @@ function enhancePlanScreen(){
   }
   if(plan?.type==='bankDeposit'&&plan.bankDepositRateMode!=='manual'){plan.annualReturn=bankDepositRate();plan.bankDepositRateInitialized=true;plan.bankDepositRateMode='auto';save()}
   const typeInput=root.querySelector('[data-k="type"]');
-  const mobileFlow=matchMedia('(max-width:850px)').matches;
+  const mobileFlow=matchMedia('(max-width:1100px)').matches;
   const applyPlanType=(selected,advance=false)=>{
     if(!selected)return false;
     plan.type=selected;
@@ -410,7 +410,7 @@ function enhancePlanScreen(){
     productCard.append(inline);
     nav.classList.add('plan-only-nav');
   }
-  if(matchMedia('(max-width:850px)').matches&&productCard&&productGrid){
+  if(matchMedia('(max-width:1100px)').matches&&productCard&&productGrid){
     const fields=[productGrid.querySelector('[data-k="type"]')?.closest('label'),productGrid.querySelector('[data-k="value"]')?.closest('label'),productGrid.querySelector('[data-k="cost"]')?.closest('label')];
     const hasCost=!settings[plan.type]?.noCost;
     if(!hasCost&&mobileProductField>1)mobileProductField=1;
@@ -442,7 +442,8 @@ function enhancePlanScreen(){
     productCard.querySelector('.card-inline-actions')?.classList.add('desktop-product-actions');
     let summary=root.querySelector('.mobile-plan-summary');
     if(!summary){summary=document.createElement('div');summary.className='mobile-plan-summary';root.append(summary)}
-    summary.innerHTML=`<span><small>שווי התכניות שהוזנו</small><b>${fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span>`;
+    summary.innerHTML=`<span><small>שווי התכניות שהוזנו</small><b>${fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span><button class="mobile-reset-small" type="button" aria-label="איפוס וניקוי הטופס">↻ איפוס</button>`;
+    summary.querySelector('.mobile-reset-small').onclick=clearAllPlans;
   }else root.querySelector('.mobile-plan-summary')?.remove();
   syncLedgerAmounts();updateFirstScreenReset();
 }

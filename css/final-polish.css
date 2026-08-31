@@ -121,6 +121,19 @@
   main{width:calc(100% - 16px)!important}.steps{padding-inline:3px!important}.steps button{font-size:.65rem!important}.steps i{width:26px!important;height:26px!important}.screen-head h1,.intro h1{font-size:1.62rem!important}.screen-head-tools{grid-template-columns:1fr}.clear-plan-form{min-height:42px}.kpis.without-net-target{grid-template-columns:1fr!important}.result-panel tbody tr{grid-template-columns:1fr}.result-panel tbody td{grid-column:1!important}.card-inline-actions{grid-template-columns:1fr!important}.card-inline-actions #showPlanNow{grid-column:1!important}.precision-actions{display:grid;grid-template-columns:1fr}.precision-actions button{width:100%}
 }
 
+/* Stable wizard behavior for mobile browsers that request a desktop-width viewport. */
+@media(max-width:1100px){
+  .screen[data-screen="2"]{padding-bottom:128px!important}
+  .mobile-plan-summary{display:none!important;grid-template-columns:1fr 1fr auto!important;align-items:center!important;padding:8px 10px!important;pointer-events:none!important}
+  body:has(.screen[data-screen="2"].active) .mobile-plan-summary{display:grid!important}
+  .mobile-reset-small{display:block!important;pointer-events:auto!important;touch-action:manipulation;border:1px solid #d2b46d;border-radius:9px;background:#ffffff12;color:#efd89d;font:inherit;font-size:.7rem;font-weight:800;padding:7px 9px;white-space:nowrap}
+  .mobile-wizard-card,.mobile-field-nav{position:relative;z-index:3;pointer-events:auto!important}
+  .mobile-field-nav button,.mobile-wizard-card select,.mobile-wizard-card input{touch-action:manipulation;pointer-events:auto!important}
+  body:has(.screen[data-screen="2"].active) .access-btn{z-index:98!important;bottom:78px!important}
+  body:has(.screen[data-screen="2"].active) .access-panel{z-index:99!important;bottom:136px!important}
+  .mobile-wizard-card .simple-help,.mobile-wizard-card .pension-card-note,.mobile-wizard-card .locked-amount-note{margin-bottom:14px}
+}
+
 @media(max-width:850px){
   .mobile-selected-type{gap:8px!important;margin-bottom:8px!important;padding:8px 11px!important}
   .mobile-wizard-card .mobile-field{gap:4px!important}.mobile-wizard-card .product-grid{min-height:96px!important}
@@ -134,8 +147,8 @@
   .mobile-plan-summary{pointer-events:none!important}
 }
 
-/* Focused mobile screens. */
-@media(max-width:850px){
+/* Focused mobile screens, including phones requesting a desktop-width page. */
+@media(max-width:1100px){
   html:has(.screen[data-screen="1"].active),body:has(.screen[data-screen="1"].active){height:100%;overflow:hidden!important}
   .app:has(.screen[data-screen="1"].active){height:100dvh;overflow:hidden}.app:has(.screen[data-screen="1"].active) footer{display:none!important}
   .screen[data-screen="1"].active{height:calc(100dvh - 126px)!important;min-height:0!important;justify-content:flex-start!important;padding-top:clamp(32px,8vh,72px)!important;padding-bottom:12px!important}
