@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], c
 const STORE='drawwise-wizard-v4'; const uid=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 let settings=clone(PRODUCT_TYPES), screen=1;
 let state=load()||{requiredNet:0,expectedInflation:2.5,annualReturn:7,years:10,products:[make()]};
-function make(type='moneyFund',value=0,cost=0){return{id:uid(),type,value,cost,annualReturn:.07,years:10,cpiAdjustment:0,taxNowOverride:'',taxFutureOverride:'',wrapperOverride:'',taxBasisOverride:'',rewardsRatio:.67,severanceRatio:.33,rewardsTaxRate:.35,severanceTaxRate:0,severanceWithdrawable:false,isLiquid:true}}
+function make(type='',value=0,cost=0){return{id:uid(),type,value,cost,annualReturn:.07,years:10,cpiAdjustment:0,taxNowOverride:'',taxFutureOverride:'',wrapperOverride:'',taxBasisOverride:'',rewardsRatio:.67,severanceRatio:.33,rewardsTaxRate:.35,severanceTaxRate:0,severanceWithdrawable:false,isLiquid:true}}
 function load(){try{return JSON.parse(localStorage.getItem(STORE))}catch{return null}} function save(){localStorage.setItem(STORE,JSON.stringify(state))}
 const money=new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:0}), money2=new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',minimumFractionDigits:2,maximumFractionDigits:2});
 const fmt=n=>money.format(Number.isFinite(n)?n:0), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -206,10 +206,10 @@ function enhancePlanScreen(){
       mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><small>בחירת סוג התכנית תעביר אוטומטית לשלב הבא</small>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;
     }else if(mobileProductField===1&&hasCost){
-      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="cta mobile-forward" type="button">התקדמות לעלות הממוצעת <span>←</span></button>';
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזור</button><button class="cta mobile-forward" type="button">התקדם <span>←</span></button>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;mobileNav.querySelector('.mobile-forward').onclick=goForward;
     }else{
-      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="outline mobile-add" type="button">＋ הוספת תכנית</button><button class="cta mobile-show" type="button">הצגת תכנית המשיכה <span>←</span></button>';
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזור</button><button class="outline mobile-add" type="button">＋ הוספת תכנית</button><button class="cta mobile-show" type="button">הצגת תכנית המשיכה <span>←</span></button>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;
       mobileNav.querySelector('.mobile-add').onclick=()=>{state.products.push(make());productStep=state.products.length-1;mobileProductField=0;save();renderProducts()};
       mobileNav.querySelector('.mobile-show').onclick=()=>go(3);
