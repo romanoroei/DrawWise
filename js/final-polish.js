@@ -211,8 +211,9 @@ function enhancePlanScreen(){
     const goBack=()=>{if(mobileProductField>0){mobileProductField--;renderProducts()}else go(1)};
     const goForward=()=>{mobileProductField=Math.min(hasCost?2:1,mobileProductField+1);renderProducts();setTimeout(()=>root.querySelector(mobileProductField===1?'[data-k="value"]':'[data-k="cost"]')?.focus(),80)};
     if(mobileProductField===0){
-      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><small>בחירת סוג התכנית תעביר אוטומטית לשלב הבא</small>';
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="cta mobile-type-next" type="button">המשך <span>←</span></button><small>בחרו סוג תכנית ולחצו על המשך</small>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;
+      mobileNav.querySelector('.mobile-type-next').onclick=()=>{const select=root.querySelector('[data-k="type"]');if(!select?.value){toast('יש לבחור סוג תכנית');select?.focus();return}typeInput.onchange?.({target:select})};
     }else if(mobileProductField===1&&hasCost){
       mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזור</button><button class="cta mobile-forward" type="button">התקדם <span>←</span></button>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;mobileNav.querySelector('.mobile-forward').onclick=goForward;
