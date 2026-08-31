@@ -129,6 +129,9 @@
   .mobile-plan-summary{display:none!important}
   body:has(.screen[data-screen="2"].active) .mobile-plan-summary{display:grid!important}
   .mobile-field-nav .mobile-type-next{display:flex!important}.mobile-field-nav>small{grid-column:1/-1;text-align:center;margin-top:-2px}
+  .mobile-wizard-card,.mobile-field-nav{position:relative;z-index:3;pointer-events:auto!important}
+  .mobile-field-nav button,.mobile-wizard-card select,.mobile-wizard-card input{touch-action:manipulation;pointer-events:auto!important;-webkit-tap-highlight-color:rgba(178,139,69,.18)}
+  .mobile-plan-summary{pointer-events:none!important}
 }
 
 /* Focused mobile screens. */
