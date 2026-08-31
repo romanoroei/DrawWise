@@ -406,12 +406,17 @@ function enhancePlanScreen(){
     productCard.append(inline);
     nav.classList.add('plan-only-nav');
   }
-  if(matchMedia('(max-width:700px)').matches&&productCard&&productGrid){
+  if(matchMedia('(max-width:850px)').matches&&productCard&&productGrid){
     const fields=[productGrid.querySelector('[data-k="type"]')?.closest('label'),productGrid.querySelector('[data-k="value"]')?.closest('label'),productGrid.querySelector('[data-k="cost"]')?.closest('label')];
     const hasCost=!settings[plan.type]?.noCost;
     if(!hasCost&&mobileProductField>1)mobileProductField=1;
     fields.forEach((field,index)=>{if(field){field.classList.add('mobile-field');field.classList.toggle('mobile-field-active',index===mobileProductField)}});
     productGrid.dataset.mobileStep=String(mobileProductField);
+    let selectedType=productCard.querySelector('.mobile-selected-type');
+    if(mobileProductField>0&&plan.type){
+      if(!selectedType){selectedType=document.createElement('div');selectedType.className='mobile-selected-type';productCard.prepend(selectedType)}
+      selectedType.innerHTML=`<small>סוג התכנית שנבחר</small><strong>${esc((settings[plan.type]||PRODUCT_TYPES.other).label)}</strong>`;
+    }else selectedType?.remove();
     let mobileNav=productCard.querySelector('.mobile-field-nav');
     if(!mobileNav){mobileNav=document.createElement('div');mobileNav.className='mobile-field-nav';productGrid.after(mobileNav)}
     const goBack=()=>{if(mobileProductField>0){mobileProductField--;renderProducts()}else go(1)};
@@ -433,7 +438,7 @@ function enhancePlanScreen(){
     let summary=root.querySelector('.mobile-plan-summary');
     if(!summary){summary=document.createElement('div');summary.className='mobile-plan-summary';root.append(summary)}
     summary.innerHTML=`<span><small>שווי התכניות שהוזנו</small><b>${fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span>`;
-  }
+  }else root.querySelector('.mobile-plan-summary')?.remove();
   syncLedgerAmounts();updateFirstScreenReset();
 }
 
