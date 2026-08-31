@@ -360,9 +360,10 @@ function enhancePlanScreen(){
   }
   if(plan?.type==='bankDeposit'&&plan.bankDepositRateMode!=='manual'){plan.annualReturn=bankDepositRate();plan.bankDepositRateInitialized=true;plan.bankDepositRateMode='auto';save()}
   const typeInput=root.querySelector('[data-k="type"]');
-  if(typeInput){const handleTypeSelection=e=>{
-    if(!e.target.value)return;
-    plan.type=e.target.value;
+  const mobileFlow=matchMedia('(max-width:850px)').matches;
+  const applyPlanType=(selected,advance=false)=>{
+    if(!selected)return false;
+    plan.type=selected;
     if(settings[plan.type]?.noCost)plan.cost=plan.value;
     if(plan.type==='moneyFund'){
       plan.annualReturn=bankOfIsraelRate;
@@ -375,10 +376,10 @@ function enhancePlanScreen(){
     if(plan.type==='education')plan.isLiquid=true;
     if(settings[plan.type]?.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374;plan.pensionReturnInitialized=true}
     save();
-    mobileProductField=1;
-    renderProducts();
-    setTimeout(()=>$('#products [data-k="value"]')?.focus(),80);
-  };typeInput.oninput=handleTypeSelection;typeInput.onchange=handleTypeSelection}
+    if(advance||!mobileFlow){mobileProductField=1;renderProducts();setTimeout(()=>$('#products [data-k="value"]')?.focus(),80)}
+    return true;
+  };
+  if(typeInput){const rememberType=e=>applyPlanType(e.target.value,false);typeInput.oninput=rememberType;typeInput.onchange=rememberType}
   root.querySelectorAll('[data-k="value"],[data-k="cost"]').forEach(input=>{
     const key=input.dataset.k;
     input.value=finiteNonNegative(plan[key])?formatInput(plan[key]):'';
@@ -427,7 +428,7 @@ function enhancePlanScreen(){
     if(mobileProductField===0){
       mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="cta mobile-type-next" type="button">המשך <span>←</span></button><small>בחרו סוג תכנית ולחצו על המשך</small>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;
-      mobileNav.querySelector('.mobile-type-next').onclick=()=>{const select=root.querySelector('[data-k="type"]');if(!select?.value){toast('יש לבחור סוג תכנית');select?.focus();return}typeInput.onchange?.({target:select})};
+      mobileNav.querySelector('.mobile-type-next').onclick=()=>{const select=root.querySelector('[data-k="type"]');if(!select?.value){toast('יש לבחור סוג תכנית');select?.focus();return}applyPlanType(select.value,true)};
     }else if(mobileProductField===1&&hasCost){
       mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזור</button><button class="cta mobile-forward" type="button">התקדם <span>←</span></button>';
       mobileNav.querySelector('.mobile-back').onclick=goBack;mobileNav.querySelector('.mobile-forward').onclick=goForward;
