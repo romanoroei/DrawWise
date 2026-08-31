@@ -146,7 +146,8 @@ function enhancePlanScreen(){
   }
   if(plan?.type==='bankDeposit'&&plan.bankDepositRateMode!=='manual'){plan.annualReturn=bankDepositRate();plan.bankDepositRateInitialized=true;plan.bankDepositRateMode='auto';save()}
   const typeInput=root.querySelector('[data-k="type"]');
-  if(typeInput)typeInput.onchange=e=>{
+  if(typeInput){const handleTypeSelection=e=>{
+    if(!e.target.value)return;
     plan.type=e.target.value;
     if(settings[plan.type]?.noCost)plan.cost=plan.value;
     if(plan.type==='moneyFund'){
@@ -162,10 +163,12 @@ function enhancePlanScreen(){
     save();
     mobileProductField=1;
     renderProducts();
-    setTimeout(()=>$('#products [data-k="value"]')?.focus(),0);
-  };
+    setTimeout(()=>$('#products [data-k="value"]')?.focus(),80);
+  };typeInput.oninput=handleTypeSelection;typeInput.onchange=handleTypeSelection}
   root.querySelectorAll('[data-k="value"],[data-k="cost"]').forEach(input=>{
     const key=input.dataset.k;
+    input.value=finiteNonNegative(plan[key])?formatInput(plan[key]):'';
+    input.placeholder='הזינו סכום';
     input.oninput=e=>{
       const raw=e.target.value.replace(/[^0-9]/g,'').slice(0,11);
       const parsed=Math.min(MAX_WITHDRAWAL,finiteNonNegative(raw));
@@ -176,7 +179,7 @@ function enhancePlanScreen(){
       const note=root.querySelector('.locked-amount-note b');
       if(note)note.textContent=fmt(Math.min(finiteNonNegative(plan.value),finiteNonNegative(plan.lockedAmount)));
     };
-    input.onblur=e=>{e.target.value=formatInput(plan[key])};
+    input.onblur=e=>{e.target.value=finiteNonNegative(plan[key])?formatInput(plan[key]):''};
   });
   const nav=root.querySelector('.product-nav'),productCard=root.querySelector('.product-card');
   if(plan?.type==='amendment190'&&productCard&&!productCard.querySelector('.locked-amount-note')){

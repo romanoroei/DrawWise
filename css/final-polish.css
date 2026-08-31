@@ -121,6 +121,15 @@
   main{width:calc(100% - 16px)!important}.steps{padding-inline:3px!important}.steps button{font-size:.65rem!important}.steps i{width:26px!important;height:26px!important}.screen-head h1,.intro h1{font-size:1.62rem!important}.screen-head-tools{grid-template-columns:1fr}.clear-plan-form{min-height:42px}.kpis.without-net-target{grid-template-columns:1fr!important}.result-panel tbody tr{grid-template-columns:1fr}.result-panel tbody td{grid-column:1!important}.card-inline-actions{grid-template-columns:1fr!important}.card-inline-actions #showPlanNow{grid-column:1!important}.precision-actions{display:grid;grid-template-columns:1fr}.precision-actions button{width:100%}
 }
 
+@media(max-width:850px){
+  .mobile-selected-type{gap:8px!important;margin-bottom:8px!important;padding:8px 11px!important}
+  .mobile-wizard-card .mobile-field{gap:4px!important}.mobile-wizard-card .product-grid{min-height:96px!important}
+  body:has(.screen[data-screen="2"].active) .access-btn{z-index:98!important;bottom:76px!important}
+  body:has(.screen[data-screen="2"].active) .access-panel{z-index:99!important;bottom:132px!important}
+  .mobile-plan-summary{display:none!important}
+  body:has(.screen[data-screen="2"].active) .mobile-plan-summary{display:grid!important}
+}
+
 /* Focused mobile screens. */
 @media(max-width:850px){
   html:has(.screen[data-screen="1"].active),body:has(.screen[data-screen="1"].active){height:100%;overflow:hidden!important}
