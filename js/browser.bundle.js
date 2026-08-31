@@ -216,6 +216,7 @@ const BANK_OF_ISRAEL_FALLBACK=.035;
 const AMENDMENT_190_LOCKED_2025=38412;
 let bankOfIsraelRate=(()=>{const cached=Number(localStorage.getItem('dw-boi-rate'));return cached>0&&cached<.2?cached:BANK_OF_ISRAEL_FALLBACK})();
 const bankDepositRate=()=>Math.max(0,bankOfIsraelRate-.015);
+let mobileProductField=0;
 
 async function refreshBankOfIsraelRate(){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
@@ -373,6 +374,7 @@ function enhancePlanScreen(){
     if(plan.type==='education')plan.isLiquid=true;
     if(settings[plan.type]?.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374;plan.pensionReturnInitialized=true}
     save();
+    mobileProductField=1;
     renderProducts();
     setTimeout(()=>$('#products [data-k="value"]')?.focus(),0);
   };
@@ -403,6 +405,34 @@ function enhancePlanScreen(){
     if(next){const addHandler=next.onclick;next.onclick=event=>{addHandler?.call(next,event);setTimeout(()=>$('#products [data-k="type"]')?.focus(),0)};inline.append(next)}if(show)inline.append(show);if(prev)inline.append(prev);
     productCard.append(inline);
     nav.classList.add('plan-only-nav');
+  }
+  if(matchMedia('(max-width:700px)').matches&&productCard&&productGrid){
+    const fields=[productGrid.querySelector('[data-k="type"]')?.closest('label'),productGrid.querySelector('[data-k="value"]')?.closest('label'),productGrid.querySelector('[data-k="cost"]')?.closest('label')];
+    const hasCost=!settings[plan.type]?.noCost;
+    if(!hasCost&&mobileProductField>1)mobileProductField=1;
+    fields.forEach((field,index)=>{if(field){field.classList.add('mobile-field');field.classList.toggle('mobile-field-active',index===mobileProductField)}});
+    productGrid.dataset.mobileStep=String(mobileProductField);
+    let mobileNav=productCard.querySelector('.mobile-field-nav');
+    if(!mobileNav){mobileNav=document.createElement('div');mobileNav.className='mobile-field-nav';productGrid.after(mobileNav)}
+    const goBack=()=>{if(mobileProductField>0){mobileProductField--;renderProducts()}else go(1)};
+    const goForward=()=>{mobileProductField=Math.min(hasCost?2:1,mobileProductField+1);renderProducts();setTimeout(()=>root.querySelector(mobileProductField===1?'[data-k="value"]':'[data-k="cost"]')?.focus(),80)};
+    if(mobileProductField===0){
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><small>בחירת סוג התכנית תעביר אוטומטית לשלב הבא</small>';
+      mobileNav.querySelector('.mobile-back').onclick=goBack;
+    }else if(mobileProductField===1&&hasCost){
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="cta mobile-forward" type="button">התקדמות לעלות הממוצעת <span>←</span></button>';
+      mobileNav.querySelector('.mobile-back').onclick=goBack;mobileNav.querySelector('.mobile-forward').onclick=goForward;
+    }else{
+      mobileNav.innerHTML='<button class="outline mobile-back" type="button">חזרה</button><button class="outline mobile-add" type="button">＋ הוספת תכנית</button><button class="cta mobile-show" type="button">הצגת תכנית המשיכה <span>←</span></button>';
+      mobileNav.querySelector('.mobile-back').onclick=goBack;
+      mobileNav.querySelector('.mobile-add').onclick=()=>{state.products.push(make());productStep=state.products.length-1;mobileProductField=0;save();renderProducts()};
+      mobileNav.querySelector('.mobile-show').onclick=()=>go(3);
+    }
+    productCard.classList.add('mobile-wizard-card');
+    productCard.querySelector('.card-inline-actions')?.classList.add('desktop-product-actions');
+    let summary=root.querySelector('.mobile-plan-summary');
+    if(!summary){summary=document.createElement('div');summary.className='mobile-plan-summary';root.append(summary)}
+    summary.innerHTML=`<span><small>שווי התכניות שהוזנו</small><b>${fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span>`;
   }
   syncLedgerAmounts();updateFirstScreenReset();
 }
