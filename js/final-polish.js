@@ -252,12 +252,14 @@ function enhancePriorityTable(){
   zone?.querySelector('.result-panel thead [data-future]')?.remove();
   zone?.querySelectorAll('.future-cost').forEach(cell=>cell.remove());
   zone?.querySelector('[data-future-foot]')?.remove();
+  const mobileLabels=[...zone.querySelectorAll('.result-panel thead th')].map(header=>header.textContent.trim());
   $$('#resultsBody tr').forEach((row,i)=>{
     const cell=row.firstElementChild;
     if(cell){cell.className='priority-cell';cell.innerHTML=`<span class="priority-number">${i+1}</span>`}
     const resultRow=result().rows[i],reason=row.lastElementChild;
     if(resultRow){row.classList.add('clickable-result');row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-label',`פתיחת פירוט החישוב עבור ${(settings[resultRow.type]||PRODUCT_TYPES.other).label}`);const open=()=>openPlanDetails(resultRow);row.onclick=open;row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open()}}}
     if(resultRow&&reason&&!reason.querySelector('.future-impact')){const futureRate=Math.max(0,resultRow.futureOpportunityCostPerNet||0),futureLoss=futureRate*Math.max(0,resultRow.net);reason.insertAdjacentHTML('beforeend',`<div class="future-impact"><div><span>תוספת שווי עתידית נטו שלא תישאר בתכנית</span><b>${fmt(futureLoss)} · ${(futureRate*100).toFixed(1)}%</b><i style="--bar:${Math.min(100,Math.max(futureLoss?4:0,futureRate*100))}%"></i></div><small class="future-impact-explain">אומדן לתוספת הצמיחה נטו שהכסף היה יכול לצבור עד סוף התקופה שהוגדרה אילו נשאר מושקע, לאחר המס העתידי שהוגדר.</small></div>`)}
+    [...row.children].forEach((cell,index)=>cell.dataset.label=mobileLabels[index]||'');
   });
   zone?.querySelectorAll('.amount').forEach(cell=>{const number=cell.textContent.trim().replace(/[^0-9.,-]/g,'').trim();if(number)cell.innerHTML=`<span class="table-money"><span class="shekel">₪</span><span>${number}</span></span>`});
 }
