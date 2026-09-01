@@ -145,15 +145,14 @@
   .screen[data-screen="2"]>.screen-actions{display:none!important}
   .m2-products{flex:1;min-height:0;width:min(720px,100%);margin-inline:auto;display:flex!important;flex-direction:column;overflow:hidden}
   .m2-card{background:#fffdf9;border:1px solid #d9cfbe;border-radius:17px;padding:15px;box-shadow:0 12px 32px #111d3312}
-  .m2-head{display:flex;flex-direction:column;gap:3px;margin-bottom:11px;padding:9px 12px;border:1px solid #dccda9;border-radius:11px;background:#f4ecdc;animation:mobileFieldIn .22s ease}
-  .m2-head-type{color:#111d33;font-size:1.02rem;font-weight:900}
+  .m2-head{display:flex;flex-direction:column;gap:3px;margin:0 2px 10px;padding:0 0 9px;border:0;border-bottom:1px solid #e5dccd;background:transparent;animation:mobileFieldIn .22s ease}
+  .m2-head-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.m2-head-type{color:#111d33;font-size:.88rem;font-weight:900}
   .m2-head-line{color:#5c5140;font-size:.78rem}.m2-head-line b{color:#111d33;font-weight:800}
-  .m2-input-row{display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:end;gap:8px}
+  .m2-input-row{display:grid;grid-template-columns:minmax(0,1fr);align-items:end;gap:8px}
   .m2-field{display:grid;gap:5px;color:#4e5360;font-size:.8rem;font-weight:800}
   .m2-field>span{font-size:.8rem}
   .m2-field input,.m2-field select{height:52px;border:1px solid #d9cfbe;border-radius:12px;background:#fbf9f5;padding:0 14px;font:inherit;font-size:16px;color:#111d33;width:100%;box-sizing:border-box}
-  .m2-settings{width:44px;height:44px;margin-bottom:4px;border:0;border-radius:50%;background:#f3ede2;color:#765b2b;font-size:1.1rem;cursor:pointer;touch-action:manipulation;visibility:hidden}
-  .m2-settings.m2-settings--ready{visibility:visible}
+  .m2-settings{width:31px;height:31px;margin:0;border:0;border-radius:50%;background:#f3ede2;color:#765b2b;font-size:.9rem;cursor:pointer;touch-action:manipulation}
   .m2-actions{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid #e5dccd}
   .m2-actions button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;touch-action:manipulation;pointer-events:auto}
   .m2-actions>small{grid-column:1/-1;text-align:center;color:#767a84;font-size:.72rem;margin-top:-2px}
@@ -170,6 +169,7 @@
   .m2-dock.open .m2-panel-caret{transform:rotate(180deg)}
   .m2-plan-list{display:grid;gap:6px;max-height:min(46dvh,320px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:2px}
   .m2-plan-list[hidden]{display:none!important}
+  .m2-list-total{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:3px;padding:11px;border-top:1px solid #d2b46d;background:#111d33;color:#fff}.m2-list-total b{color:#efd89d}
   .m2-plan-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:right;border:1px solid #ffffff1f;border-radius:10px;background:#ffffff0f;color:#fff;padding:10px 12px;font:inherit;cursor:pointer;touch-action:manipulation}
   .m2-plan-item.current{border-color:#efd89d;background:#efd89d1f}
   .m2-plan-name{font-size:.82rem;font-weight:800}
