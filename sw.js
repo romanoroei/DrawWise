@@ -5,7 +5,7 @@
    immediately, even when the browser is holding a cached index.html.
    Bump VERSION on every release so the browser detects a byte change,
    installs the new worker, and reloads open tabs. */
-const VERSION = 'mobile18';
+const VERSION = 'mobile19';
 
 self.addEventListener('install', () => self.skipWaiting());
 

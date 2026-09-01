@@ -449,56 +449,111 @@ function enhancePlanScreen(){
 }
 
 const finalRenderProducts=renderProducts;
+let mobileEditAll=false;
+
+function m2ApplyType(plan,selected){
+  if(!selected)return false;
+  plan.type=selected;
+  const d=settings[selected]||PRODUCT_TYPES.other;
+  if(d.noCost)plan.cost=plan.value;
+  if(selected==='moneyFund'){plan.annualReturn=bankOfIsraelRate;plan.moneyFundRateMode='auto'}
+  if(selected==='bankDeposit'){plan.annualReturn=bankDepositRate();plan.bankDepositRateMode='auto'}
+  if(selected==='amendment190'){plan.lockedAmount=plan.lockedAmount??AMENDMENT_190_LOCKED_2025;plan.annualReturn=.07}
+  if(d.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374}
+  save();return true;
+}
+
+function m2DockHtml(){
+  const total=state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0);
+  const items=state.products.map((p,i)=>({p,i,d:settings[p.type]||PRODUCT_TYPES.other})).filter(o=>o.p.type)
+    .map(({p,i,d})=>`<button class="m2-plan-item${i===productStep?' current':''}" type="button" data-plan="${i}"><span class="m2-plan-name">${esc(d.label)}</span><span class="m2-plan-nums"><b>${fmt(p.value)}</b>${d.noCost?'':`<i>עלות ${fmt(p.cost)}</i>`}</span></button>`).join('')
+    || '<div class="m2-plan-empty">עדיין לא הוזנו תכניות</div>';
+  return `<div class="m2-dock"><div class="m2-target"><small>סכום היעד</small><b>${fmt(state.requiredNet)}</b><small>נטו</small></div>`+
+    `<button class="m2-panel" type="button" aria-expanded="false"><span class="m2-panel-label">התכניות שהוזנו</span><span class="m2-panel-caret" aria-hidden="true">▾</span></button>`+
+    `<div class="m2-plan-list" hidden>${items}<div class="m2-list-total"><span>שווי כל התכניות</span><b data-m2-total>${fmt(total)}</b></div><button class="m2-reset" id="m2Reset" type="button">↻ ניקוי כל הטופס</button></div></div>`;
+}
+
+function m2WireDock(root){
+  const panel=root.querySelector('.m2-panel'),planList=root.querySelector('.m2-plan-list'),dock=root.querySelector('.m2-dock');
+  panel?.addEventListener('click',()=>{const open=planList.hidden;planList.hidden=!open;panel.setAttribute('aria-expanded',String(open));dock?.classList.toggle('open',open)});
+  planList?.querySelectorAll('.m2-plan-item').forEach(btn=>btn.addEventListener('click',()=>{productStep=+btn.dataset.plan;mobileEditAll=true;renderProducts()}));
+  root.querySelector('#m2Reset')?.addEventListener('click',clearAllPlans);
+}
+
+function renderMobilePlanEditor(root){
+  const plan=state.products[productStep];
+  const defaults=settings[plan.type]||PRODUCT_TYPES.other;
+  const hasCost=!defaults.noCost;
+  root.className='products m2-products m2-editing';
+  root.innerHTML=`<div class="m2-card m2-card-edit">`+
+    `<div class="m2-head"><div class="m2-head-row"><strong class="m2-head-type">${plan.type?esc(defaults.label):'עריכת תכנית'}</strong><button class="m2-settings" type="button" aria-label="הגדרות מתקדמות" title="הגדרות מתקדמות">⚙</button></div><span class="m2-edit-hint">כל הנתונים פתוחים לעריכה. שינוי נשמר מיד.</span></div>`+
+    `<label class="m2-field"><span>סוג התכנית</span><select id="m2Type">${typeOptions(plan.type)}</select></label>`+
+    `<label class="m2-field"><span>שווי נוכחי (₪)</span><input id="m2Value" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.value)?formatInput(plan.value):''}"></label>`+
+    (hasCost?`<label class="m2-field"><span>עלות ממוצעת / הפקדות (₪)</span><input id="m2Cost" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.cost)?formatInput(plan.cost):''}"></label>`:'')+
+    `<div class="m2-actions m2-actions-final"><button class="cta" id="m2EditDone" type="button">שמירה וחזרה</button>${state.products.length>1?'<button class="outline m2-danger" id="m2EditDelete" type="button">מחיקת התכנית</button>':''}</div>`+
+  `</div>`+m2DockHtml();
+
+  root.querySelector('.m2-settings')?.addEventListener('click',()=>openPrecisionModal(plan));
+  const type=root.querySelector('#m2Type');
+  type.addEventListener('change',()=>{m2ApplyType(plan,type.value);renderProducts()});
+  root.querySelectorAll('#m2Value,#m2Cost').forEach(inp=>{
+    const key=inp.id==='m2Value'?'value':'cost';
+    inp.oninput=()=>{plan[key]=Math.min(MAX_WITHDRAWAL,finiteNonNegative(inp.value.replace(/[^0-9]/g,'')));if(key==='value'&&(settings[plan.type]||{}).noCost)plan.cost=plan.value;save();root.querySelectorAll('[data-m2-total]').forEach(n=>n.textContent=fmt(state.products.reduce((s,x)=>s+finiteNonNegative(x.value),0)))};
+    inp.onblur=()=>{inp.value=finiteNonNegative(plan[key])?formatInput(plan[key]):''};
+  });
+  root.querySelector('#m2EditDone')?.addEventListener('click',()=>{mobileEditAll=false;mobileProductField=!plan.type?0:(settings[plan.type]||PRODUCT_TYPES.other).noCost?1:2;renderProducts()});
+  root.querySelector('#m2EditDelete')?.addEventListener('click',()=>{if(!confirm('למחוק את התכנית?'))return;state.products.splice(productStep,1);productStep=Math.max(0,productStep-1);mobileEditAll=false;mobileProductField=0;save();renderProducts()});
+  m2WireDock(root);
+  updateFirstScreenReset();
+}
+
 function renderMobileProductsRebuilt(){
   const root=$('#products');
   if(!state.products.length)state.products.push(make());
   productStep=Math.max(0,Math.min(productStep,state.products.length-1));
   const plan=state.products[productStep];
+  if(mobileEditAll)return renderMobilePlanEditor(root);
   if(!plan.type)mobileProductField=0;
   const defaults=settings[plan.type]||PRODUCT_TYPES.other;
   const hasCost=!defaults.noCost;
-  if(!hasCost&&mobileProductField>2)mobileProductField=2;
-  const total=state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0);
+  if(mobileProductField>1&&!hasCost)mobileProductField=1;
+  if(mobileProductField>2)mobileProductField=2;
+  const isLast=mobileProductField===2||(mobileProductField===1&&!hasCost);
 
   let fieldLabel,fieldControl;
   if(mobileProductField===0){fieldLabel='סוג התכנית';fieldControl=`<select id="m2Type">${typeOptions(plan.type)}</select>`}
   else if(mobileProductField===1){fieldLabel='שווי נוכחי (₪)';fieldControl=`<input id="m2Value" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.value)?formatInput(plan.value):''}">`}
-  else if(hasCost){fieldLabel='עלות ממוצעת / הפקדות (₪)';fieldControl=`<input id="m2Cost" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.cost)?formatInput(plan.cost):''}">`}
-  else{fieldLabel='';fieldControl=''}
+  else{fieldLabel='עלות ממוצעת / הפקדות (₪)';fieldControl=`<input id="m2Cost" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.cost)?formatInput(plan.cost):''}">`}
 
   let head='';
   if(plan.type){
+    const showVal=finiteNonNegative(plan.value)>0&&mobileProductField>=2;
+    const showCost=hasCost&&finiteNonNegative(plan.cost)>0&&mobileProductField>=2;
     head=`<div class="m2-head"><div class="m2-head-row"><strong class="m2-head-type">${esc(defaults.label)}</strong><button class="m2-settings" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button></div>`+
-      `<span class="m2-head-line" data-head="value"${mobileProductField>=2&&finiteNonNegative(plan.value)>0?'':' hidden'}>שווי התכנית: <b>${fmt(plan.value)}</b></span>`+
-      (hasCost?`<span class="m2-head-line" data-head="cost"${mobileProductField>=2&&finiteNonNegative(plan.cost)>0?'':' hidden'}>עלות / הפקדות: <b>${fmt(plan.cost)}</b></span>`:'')+
+      `<span class="m2-head-line" data-head="value"${showVal?'':' hidden'}>שווי נוכחי: <b>${fmt(plan.value)}</b></span>`+
+      (hasCost?`<span class="m2-head-line" data-head="cost"${showCost?'':' hidden'}>עלות / הפקדות: <b>${fmt(plan.cost)}</b></span>`:'')+
       `</div>`;
   }
 
-  const isLast=mobileProductField===2;
   const actions=isLast
-    ?`<div class="m2-actions m2-actions-final"><button class="cta" id="m2Show" type="button">הצגת תכנית המשיכה <span>←</span></button><button class="outline" id="m2Back" type="button">חזור</button><button class="outline" id="m2Add" type="button">＋ תכנית נוספת</button></div>`
+    ?`<div class="m2-actions m2-actions-final"><button class="cta" id="m2Show" type="button">הצגת תכנית המשיכה <span>←</span></button><button class="outline" id="m2Add" type="button">＋ תכנית נוספת</button><button class="outline" id="m2Back" type="button">חזור</button></div>`
     :`<div class="m2-actions"><button class="outline" id="m2Back" type="button">חזור</button><button class="cta" id="m2Continue" type="button">המשך <span>←</span></button>${mobileProductField===0?'<small id="m2Message" aria-live="polite">בחרו סוג תכנית ולחצו על המשך</small>':''}</div>`;
 
-  const planItems=state.products.map((p,i)=>{
-    const d=settings[p.type]||PRODUCT_TYPES.other;
-    return `<button class="m2-plan-item${i===productStep?' current':''}" type="button" data-plan="${i}"><span class="m2-plan-name">${i+1}. ${p.type?esc(d.label):'טרם נבחר סוג'}</span><span class="m2-plan-nums"><b>${fmt(p.value)}</b>${d.noCost?'':`<i>עלות ${fmt(p.cost)}</i>`}</span></button>`;
-  }).join('');
-
   root.className='products m2-products';
-    root.innerHTML=`<div class="m2-card">${head}<div class="m2-input-row">${fieldControl?`<label class="m2-field"><span>${fieldLabel}</span>${fieldControl}</label>`:''}</div>${actions}</div>`+
-    `<div class="m2-dock"><div class="m2-target"><small>סכום היעד</small><b>${fmt(state.requiredNet)}</b><small>נטו</small></div>`+
-    `<button class="m2-panel" type="button" aria-expanded="false"><span class="m2-panel-label"><small>שווי כל התכניות שהוזנו</small><b data-m2-total>${fmt(total)}</b></span><span class="m2-panel-caret" aria-hidden="true">▾</span></button>`+
-      `<div class="m2-plan-list" hidden>${planItems}<div class="m2-list-total"><span>שווי כל התכניות</span><b data-m2-total>${fmt(total)}</b></div><button class="m2-reset" id="m2Reset" type="button">↻ ניקוי כל הטופס</button></div></div>`;
+  root.innerHTML=`<div class="m2-card">${head}<div class="m2-input-row"><label class="m2-field"><span>${fieldLabel}</span>${fieldControl}</label></div>${actions}</div>`+m2DockHtml();
 
-  const applyPlanType=selected=>{if(!selected)return false;plan.type=selected;const d=settings[selected]||PRODUCT_TYPES.other;if(d.noCost)plan.cost=plan.value;if(selected==='moneyFund'){plan.annualReturn=bankOfIsraelRate;plan.moneyFundRateMode='auto'}if(selected==='bankDeposit'){plan.annualReturn=bankDepositRate();plan.bankDepositRateMode='auto'}if(selected==='amendment190'){plan.lockedAmount=plan.lockedAmount??AMENDMENT_190_LOCKED_2025;plan.annualReturn=.07}if(d.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374}save();return true};
   const type=root.querySelector('#m2Type');
-  const settingsBtn=root.querySelector('.m2-settings');
-    settingsBtn?.addEventListener('click',()=>openPrecisionModal(plan));
+  root.querySelector('.m2-settings')?.addEventListener('click',()=>openPrecisionModal(plan));
   if(type){
-      const commitType=()=>{const v=type.value||root.querySelector('#m2Type')?.value;if(!v)return;applyPlanType(v);const msg=root.querySelector('#m2Message');if(msg){msg.textContent='אפשר להמשיך';msg.classList.remove('m2-error')}
-        let h=root.querySelector('.m2-head');
-        if(!h){h=document.createElement('div');h.className='m2-head';h.innerHTML='<div class="m2-head-row"><strong class="m2-head-type"></strong><button class="m2-settings" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button></div>';root.querySelector('.m2-card').prepend(h);h.querySelector('.m2-settings').addEventListener('click',()=>openPrecisionModal(plan))}
-        h.querySelector('.m2-head-type').textContent=(settings[v]||PRODUCT_TYPES.other).label};
+    const commitType=()=>{
+      const v=type.value||root.querySelector('#m2Type')?.value;
+      if(!v)return;
+      m2ApplyType(plan,v);
+      const msg=root.querySelector('#m2Message');if(msg){msg.textContent='אפשר להמשיך';msg.classList.remove('m2-error')}
+      let h=root.querySelector('.m2-head');
+      if(!h){h=document.createElement('div');h.className='m2-head';h.innerHTML='<div class="m2-head-row"><strong class="m2-head-type"></strong><button class="m2-settings" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button></div>';root.querySelector('.m2-card').prepend(h);h.querySelector('.m2-settings').addEventListener('click',()=>openPrecisionModal(plan))}
+      h.querySelector('.m2-head-type').textContent=(settings[v]||PRODUCT_TYPES.other).label;
+    };
     type.addEventListener('change',commitType);
     type.addEventListener('input',commitType);
     type.addEventListener('blur',commitType);
@@ -511,9 +566,9 @@ function renderMobileProductsRebuilt(){
       plan[key]=Math.min(MAX_WITHDRAWAL,finiteNonNegative(moneyInput.value.replace(/[^0-9]/g,'')));
       if(key==='value'&&(settings[plan.type]||{}).noCost)plan.cost=plan.value;
       save();
-        root.querySelectorAll('[data-m2-total]').forEach(node=>node.textContent=fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0)));
-      const item=root.querySelector(`.m2-plan-item[data-plan="${productStep}"] .m2-plan-nums`);
-      if(item)item.innerHTML=`<b>${fmt(plan.value)}</b>${defaults.noCost?'':`<i>עלות ${fmt(plan.cost)}</i>`}`;
+      root.querySelectorAll('[data-m2-total]').forEach(node=>node.textContent=fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0)));
+      const line=root.querySelector(`.m2-head-line[data-head="${key}"]`);
+      if(line){line.hidden=!(finiteNonNegative(plan[key])>0);const b=line.querySelector('b');if(b)b.textContent=fmt(plan[key])}
     };
     moneyInput.onblur=()=>{moneyInput.value=finiteNonNegative(plan[key])?formatInput(plan[key]):''};
   }
@@ -531,11 +586,12 @@ function renderMobileProductsRebuilt(){
     if(mobileProductField===0){
       const chosen=(root.querySelector('#m2Type')||type||{}).value||'';
       if(!chosen&&!plan.type){advancing=false;const msg=root.querySelector('#m2Message');if(msg){msg.textContent='יש לבחור סוג תכנית לפני שממשיכים';msg.classList.add('m2-error')}(root.querySelector('#m2Type')||type)?.focus();return}
-      if(chosen)applyPlanType(chosen);
+      if(chosen)m2ApplyType(plan,chosen);
       mobileProductField=1;
     }else if(mobileProductField===1){
       if(finiteNonNegative(plan.value)<=0){advancing=false;toast('יש להזין שווי נוכחי');moneyInput?.focus();return}
-        mobileProductField=2;
+      if(!hasCost){advancing=false;return}
+      mobileProductField=2;
     }
     renderProducts();
     setTimeout(()=>$('#products').querySelector(mobileProductField===1?'#m2Value':'#m2Cost')?.focus(),80);
@@ -549,14 +605,10 @@ function renderMobileProductsRebuilt(){
   root.querySelector('#m2Show')?.addEventListener('click',()=>go(3));
   root.querySelector('#m2Add')?.addEventListener('click',()=>{
     if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');return}
-    state.products.push(make());productStep=state.products.length-1;mobileProductField=0;save();renderProducts();
+    state.products.push(make());productStep=state.products.length-1;mobileProductField=0;mobileEditAll=false;save();renderProducts();
   });
 
-  const panel=root.querySelector('.m2-panel'),planList=root.querySelector('.m2-plan-list'),dock=root.querySelector('.m2-dock');
-  panel?.addEventListener('click',()=>{const open=planList.hidden;planList.hidden=!open;panel.setAttribute('aria-expanded',String(open));dock?.classList.toggle('open',open)});
-  planList?.querySelectorAll('.m2-plan-item').forEach(btn=>btn.addEventListener('click',()=>{productStep=+btn.dataset.plan;mobileProductField=0;renderProducts()}));
-  root.querySelector('#m2Reset')?.addEventListener('click',clearAllPlans);
-
+  m2WireDock(root);
   updateFirstScreenReset();
 }
 renderProducts=function(){if(matchMedia('(max-width:1100px)').matches)renderMobileProductsRebuilt();else{finalRenderProducts();enhancePlanScreen()}};
