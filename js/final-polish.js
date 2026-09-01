@@ -246,25 +246,42 @@ function renderMobileProductsRebuilt(){
   if(!hasCost&&mobileProductField>1)mobileProductField=1;
   const total=state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0);
   const selectedType=mobileProductField>0&&plan.type?`<div class="m2-selected"><small>סוג התכנית שנבחר</small><strong>${esc(defaults.label)}</strong></div>`:'';
-  const settingsButton=plan.type?`<button class="m2-settings" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button>`:'';
+  const settingsButton=`<button class="m2-settings${plan.type?' m2-settings--ready':''}" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button>`;
   let field='';
   if(mobileProductField===0)field=`<label class="m2-field">סוג התכנית<select id="m2Type">${typeOptions(plan.type)}</select></label>`;
   if(mobileProductField===1)field=`<label class="m2-field">שווי נוכחי (₪)<input id="m2Value" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.value)?formatInput(plan.value):''}"></label>`;
   if(mobileProductField===2)field=`<label class="m2-field">עלות ממוצעת / הפקדות (₪)<input id="m2Cost" type="text" inputmode="numeric" placeholder="הזינו סכום" value="${finiteNonNegative(plan.cost)?formatInput(plan.cost):''}"></label>`;
   let actions='';
-  if(mobileProductField===0)actions='<button class="outline" id="m2Back" type="button">חזרה</button><button class="cta" id="m2Continue" type="submit">המשך <span>←</span></button><small id="m2Message" aria-live="polite">בחירת סוג תכנית תעביר אתכם מיד לשלב הבא</small>';
-  else if(mobileProductField===1&&hasCost)actions='<button class="outline" id="m2Back" type="button">חזור</button><button class="cta" id="m2Continue" type="submit">התקדם <span>←</span></button>';
+  if(mobileProductField===0)actions='<button class="outline" id="m2Back" type="button">חזרה</button><button class="cta" id="m2Continue" type="button">המשך <span>←</span></button><small id="m2Message" aria-live="polite">בחרו סוג תכנית ולחצו על המשך</small>';
+  else if(mobileProductField===1&&hasCost)actions='<button class="outline" id="m2Back" type="button">חזור</button><button class="cta" id="m2Continue" type="button">התקדם <span>←</span></button>';
   else actions='<button class="outline" id="m2Back" type="button">חזור</button><button class="outline" id="m2Add" type="button">＋ הוספת תכנית</button><button class="cta" id="m2Show" type="button">הצגת תכנית המשיכה <span>←</span></button>';
   root.className='products m2-products';
-  root.innerHTML=`<form class="m2-card" novalidate>${selectedType}<div class="m2-input-row">${field}${settingsButton}</div><div class="m2-actions">${actions}</div></form><div class="m2-bottom"><span><small>שווי התכניות שהוזנו</small><b data-m2-total>${fmt(total)}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span><button id="m2Reset" type="button" aria-label="איפוס וניקוי הטופס">↻ איפוס</button></div>`;
-  const storeType=selected=>{if(!selected)return false;plan.type=selected;const d=settings[selected]||PRODUCT_TYPES.other;if(d.noCost)plan.cost=plan.value;if(selected==='moneyFund'){plan.annualReturn=bankOfIsraelRate;plan.moneyFundRateMode='auto'}if(selected==='bankDeposit'){plan.annualReturn=bankDepositRate();plan.bankDepositRateMode='auto'}if(selected==='amendment190'){plan.lockedAmount=plan.lockedAmount??AMENDMENT_190_LOCKED_2025;plan.annualReturn=.07}if(d.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374}save();return true};
+  root.innerHTML=`<div class="m2-card">${selectedType}<div class="m2-input-row">${field}${settingsButton}</div><div class="m2-actions">${actions}</div></div><div class="m2-bottom"><span><small>שווי התכניות שהוזנו</small><b data-m2-total>${fmt(total)}</b></span><span><small>היעד המבוקש</small><b>${fmt(state.requiredNet)}</b></span><button id="m2Reset" type="button" aria-label="איפוס וניקוי הטופס">↻ איפוס</button></div>`;
+  const applyPlanType=selected=>{if(!selected)return false;plan.type=selected;const d=settings[selected]||PRODUCT_TYPES.other;if(d.noCost)plan.cost=plan.value;if(selected==='moneyFund'){plan.annualReturn=bankOfIsraelRate;plan.moneyFundRateMode='auto'}if(selected==='bankDeposit'){plan.annualReturn=bankDepositRate();plan.bankDepositRateMode='auto'}if(selected==='amendment190'){plan.lockedAmount=plan.lockedAmount??AMENDMENT_190_LOCKED_2025;plan.annualReturn=.07}if(d.pensionEarlyWithdrawal){plan.rewardsRatio=.67;plan.severanceRatio=.33;plan.rewardsTaxRate=.35;plan.severanceTaxRate=0;plan.severanceWithdrawable=false;plan.annualReturn=.0374}save();return true};
   const type=root.querySelector('#m2Type');
+  const settingsBtn=root.querySelector('.m2-settings');
+  settingsBtn?.addEventListener('click',()=>openPrecisionModal(plan));
+  if(type){
+    const commitType=()=>{if(!type.value)return;applyPlanType(type.value);settingsBtn?.classList.add('m2-settings--ready');const message=root.querySelector('#m2Message');if(message){message.textContent='סוג התכנית נשמר. אפשר להמשיך.';message.classList.remove('m2-error')}};
+    type.addEventListener('change',commitType);
+    type.addEventListener('input',commitType);
+  }
   const moneyInput=root.querySelector('#m2Value,#m2Cost');if(moneyInput){const key=moneyInput.id==='m2Value'?'value':'cost';moneyInput.oninput=()=>{plan[key]=Math.min(MAX_WITHDRAWAL,finiteNonNegative(moneyInput.value.replace(/[^0-9]/g,'')));if(key==='value'&&(settings[plan.type]||{}).noCost)plan.cost=plan.value;save();root.querySelector('[data-m2-total]').textContent=fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))};moneyInput.onblur=()=>{moneyInput.value=finiteNonNegative(plan[key])?formatInput(plan[key]):''}};
-  root.querySelector('.m2-settings')?.addEventListener('click',()=>openPrecisionModal(plan));
   root.querySelector('#m2Back').onclick=()=>{if(mobileProductField===0)go(1);else{mobileProductField--;renderProducts()}};
-  const advanceMobileProduct=()=>{if(mobileProductField===0){if(!storeType(type?.value)){const message=root.querySelector('#m2Message');if(message){message.textContent='יש לבחור סוג תכנית לפני שממשיכים';message.classList.add('m2-error')}type?.focus();return}mobileProductField=1}else{if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');moneyInput?.focus();return}mobileProductField=2}renderProducts();setTimeout(()=>root.querySelector(mobileProductField===1?'#m2Value':'#m2Cost')?.focus(),80)};
-  if(type)type.addEventListener('change',advanceMobileProduct);
-  root.querySelector('.m2-card').addEventListener('submit',event=>{event.preventDefault();advanceMobileProduct()});
+  const goForward=()=>{
+    if(mobileProductField===0){
+      const chosen=type&&type.value;
+      if(!chosen&&!plan.type){const message=root.querySelector('#m2Message');if(message){message.textContent='יש לבחור סוג תכנית לפני שממשיכים';message.classList.add('m2-error')}type?.focus();return}
+      if(chosen)applyPlanType(chosen);
+      mobileProductField=1;
+    }else{
+      if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');moneyInput?.focus();return}
+      mobileProductField=2;
+    }
+    renderProducts();
+    setTimeout(()=>$('#products').querySelector(mobileProductField===1?'#m2Value':'#m2Cost')?.focus(),80);
+  };
+  root.querySelector('#m2Continue')?.addEventListener('click',goForward);
   root.querySelector('#m2Add')?.addEventListener('click',()=>{if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');return}state.products.push(make());productStep=state.products.length-1;mobileProductField=0;save();renderProducts()});
   root.querySelector('#m2Show')?.addEventListener('click',()=>go(3));
   root.querySelector('#m2Reset').onclick=clearAllPlans;
