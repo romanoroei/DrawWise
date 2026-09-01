@@ -262,26 +262,34 @@ function renderMobileProductsRebuilt(){
   const settingsBtn=root.querySelector('.m2-settings');
   settingsBtn?.addEventListener('click',()=>openPrecisionModal(plan));
   if(type){
-    const commitType=()=>{if(!type.value)return;applyPlanType(type.value);settingsBtn?.classList.add('m2-settings--ready');const message=root.querySelector('#m2Message');if(message){message.textContent='סוג התכנית נשמר. אפשר להמשיך.';message.classList.remove('m2-error')}};
+    const commitType=()=>{const v=type.value||root.querySelector('#m2Type')?.value;if(!v)return;applyPlanType(v);settingsBtn?.classList.add('m2-settings--ready');const message=root.querySelector('#m2Message');if(message){message.textContent='סוג התכנית נשמר. אפשר להמשיך.';message.classList.remove('m2-error')}};
     type.addEventListener('change',commitType);
     type.addEventListener('input',commitType);
+    type.addEventListener('blur',commitType);
+    if(plan.type)settingsBtn?.classList.add('m2-settings--ready');
   }
   const moneyInput=root.querySelector('#m2Value,#m2Cost');if(moneyInput){const key=moneyInput.id==='m2Value'?'value':'cost';moneyInput.oninput=()=>{plan[key]=Math.min(MAX_WITHDRAWAL,finiteNonNegative(moneyInput.value.replace(/[^0-9]/g,'')));if(key==='value'&&(settings[plan.type]||{}).noCost)plan.cost=plan.value;save();root.querySelector('[data-m2-total]').textContent=fmt(state.products.reduce((sum,item)=>sum+finiteNonNegative(item.value),0))};moneyInput.onblur=()=>{moneyInput.value=finiteNonNegative(plan[key])?formatInput(plan[key]):''}};
   root.querySelector('#m2Back').onclick=()=>{if(mobileProductField===0)go(1);else{mobileProductField--;renderProducts()}};
+  let advancing=false;
   const goForward=()=>{
+    if(advancing)return;advancing=true;setTimeout(()=>{advancing=false},400);
     if(mobileProductField===0){
-      const chosen=type&&type.value;
-      if(!chosen&&!plan.type){const message=root.querySelector('#m2Message');if(message){message.textContent='יש לבחור סוג תכנית לפני שממשיכים';message.classList.add('m2-error')}type?.focus();return}
+      const chosen=(root.querySelector('#m2Type')||type||{}).value||'';
+      if(!chosen&&!plan.type){advancing=false;const message=root.querySelector('#m2Message');if(message){message.textContent='יש לבחור סוג תכנית לפני שממשיכים';message.classList.add('m2-error')}(root.querySelector('#m2Type')||type)?.focus();return}
       if(chosen)applyPlanType(chosen);
       mobileProductField=1;
     }else{
-      if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');moneyInput?.focus();return}
+      if(finiteNonNegative(plan.value)<=0){advancing=false;toast('יש להזין שווי נוכחי');moneyInput?.focus();return}
       mobileProductField=2;
     }
     renderProducts();
     setTimeout(()=>$('#products').querySelector(mobileProductField===1?'#m2Value':'#m2Cost')?.focus(),80);
   };
-  root.querySelector('#m2Continue')?.addEventListener('click',goForward);
+  const continueBtn=root.querySelector('#m2Continue');
+  if(continueBtn){
+    continueBtn.addEventListener('click',goForward);
+    continueBtn.addEventListener('pointerup',ev=>{ev.preventDefault();goForward()});
+  }
   root.querySelector('#m2Add')?.addEventListener('click',()=>{if(finiteNonNegative(plan.value)<=0){toast('יש להזין שווי נוכחי');return}state.products.push(make());productStep=state.products.length-1;mobileProductField=0;save();renderProducts()});
   root.querySelector('#m2Show')?.addEventListener('click',()=>go(3));
   root.querySelector('#m2Reset').onclick=clearAllPlans;
