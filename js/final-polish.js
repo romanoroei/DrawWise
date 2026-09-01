@@ -281,7 +281,10 @@ function renderMobileProductsRebuilt(){
   const settingsBtn=root.querySelector('.m2-settings');
     settingsBtn?.addEventListener('click',()=>openPrecisionModal(plan));
   if(type){
-      const commitType=()=>{const v=type.value||root.querySelector('#m2Type')?.value;if(!v)return;applyPlanType(v);const msg=root.querySelector('#m2Message');if(msg){msg.textContent='אפשר להמשיך';msg.classList.remove('m2-error')}};
+      const commitType=()=>{const v=type.value||root.querySelector('#m2Type')?.value;if(!v)return;applyPlanType(v);const msg=root.querySelector('#m2Message');if(msg){msg.textContent='אפשר להמשיך';msg.classList.remove('m2-error')}
+        let h=root.querySelector('.m2-head');
+        if(!h){h=document.createElement('div');h.className='m2-head';h.innerHTML='<div class="m2-head-row"><strong class="m2-head-type"></strong><button class="m2-settings" type="button" aria-label="הגדרות התכנית" title="הגדרות התכנית">⚙</button></div>';root.querySelector('.m2-card').prepend(h);h.querySelector('.m2-settings').addEventListener('click',()=>openPrecisionModal(plan))}
+        h.querySelector('.m2-head-type').textContent=(settings[v]||PRODUCT_TYPES.other).label};
     type.addEventListener('change',commitType);
     type.addEventListener('input',commitType);
     type.addEventListener('blur',commitType);
